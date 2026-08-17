@@ -21,6 +21,8 @@ FIELDS = {
     "request_id",
     "service",
     "method",
+    "endpoint",
+    "query_string",
     "action_type",
     "status_code",
     "user_agent",
@@ -142,6 +144,35 @@ def test_the_endpoint_is_the_action_not_the_flask_endpoint(client, recorded):
     client.post("/api/3/action/package_create", json={"name": "costs-2026"})
 
     assert [e["action_type"] for e in recorded] == ["package_show", "package_create"]
+
+
+def test_the_endpoint_is_the_bare_path_and_the_query_is_its_own_field(client, recorded):
+    """Split so a report can group by endpoint without ``?id=a`` and ``?id=b``
+    counting apart."""
+    client.get("/api/3/action/package_show?id=costs-2026&include_tracking=true")
+
+    assert recorded[0]["endpoint"] == "/api/3/action/package_show"
+    assert recorded[0]["query_string"] == "id=costs-2026&include_tracking=true"
+
+
+def test_a_call_without_a_query_records_none_not_an_empty_string(client, recorded):
+    client.get("/api/3/action/package_list")
+
+    assert recorded[0]["query_string"] is None
+
+
+def test_a_post_body_is_not_a_query_string(client, recorded):
+    """Entity parameters sent in JSON only appear as the resolved entity fields."""
+    client.post("/api/3/action/package_create", json={"name": "costs-2026"})
+
+    assert recorded[0]["endpoint"] == "/api/3/action/package_create"
+    assert recorded[0]["query_string"] is None
+
+
+def test_a_download_endpoint_is_recorded_too(client, recorded):
+    client.get("/dataset/costs-2026/resource/res-uuid/download/data.csv")
+
+    assert recorded[0]["endpoint"] == "/dataset/costs-2026/resource/res-uuid/download/data.csv"
 
 
 def test_request_id_comes_from_the_ingress_header(client, recorded):

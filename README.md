@@ -8,8 +8,9 @@ logger.
 ## Event fields
 
 Each event contains request metadata (`timestamp`, `request_id`, `service`,
-`method`, `action_type`, `status_code`, `user_agent`, `request_ip`, and
-`user`) plus these entity names when they can be resolved:
+`method`, `endpoint`, `query_string`, `action_type`, `status_code`,
+`user_agent`, `request_ip`, and `user`) plus these entity names when they
+can be resolved:
 
 - `dataset`
 - `resource`

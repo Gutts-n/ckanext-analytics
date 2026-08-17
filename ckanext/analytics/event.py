@@ -165,13 +165,15 @@ class RequestEvent:
 
 
     def as_dict(self) -> dict[str, Any]:
-        """Nine fields about the request, four about what it touched."""
+        """Eleven fields about the request, four about what it touched."""
         entities = self.entities()
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "request_id": self.request_id,
             "service": SERVICE,
             "method": self.request.method,
+            "endpoint": self.endpoint,
+            "query_string": self.query_string,
             "action_type": self.action_type,
             "status_code": self.response.status_code,
             "user_agent": self.request.user_agent.string or None,
@@ -191,6 +193,20 @@ class RequestEvent:
             return self.DOWNLOAD_ACTION
 
         return (self.request.view_args or {}).get("logic_function")
+
+    @property
+    def endpoint(self) -> str:
+        """The path alone, with the query in its own field - so a report can
+        group by endpoint without ``package_show?id=a`` and ``?id=b`` counting
+        apart."""
+        return self.request.path
+
+    @property
+    def query_string(self) -> str | None:
+        """The raw query as the caller sent it - nginx's ``$args``. A POST body
+        is not part of it: entity parameters sent as JSON appear only as the
+        resolved entity fields."""
+        return self.request.query_string.decode("utf-8", "replace") or None
 
     @property
     def request_id(self) -> str:
