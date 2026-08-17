@@ -34,11 +34,6 @@ Enable the plugin in the CKAN configuration:
 ckan.plugins = ... analytics
 ```
 
-Each event is one bare JSON line on the `ckanext.analytics.event` logger, so
-whatever ships the logs (Loki, a GCP log sink, a file) carries the events
-downstream. [bigquery.sql](bigquery.sql) documents the BigQuery table the
-events are designed to land in, with example reports.
-
 ## How it works
 
 The plugin subscribes one listener to CKAN's `request_finished` signal. The
