@@ -140,6 +140,11 @@ class RequestEvent:
     REAL_IP_HEADER = "X-Real-IP"
     FORWARDED_FOR_HEADER = "X-Forwarded-For"
 
+    #: Set by known internal callers (e.g. the data explorer sends
+    #: ``data-explorer``) so usage reporting can tell UI-driven traffic apart
+    #: from genuine external API use. Absent on ordinary calls.
+    REQUEST_SOURCE_HEADER = "Request-Source"
+
     def __init__(self, request: Any, response: Any, attribution: Any = None) -> None:
         self.request = request
         self.response = response
@@ -179,6 +184,7 @@ class RequestEvent:
             "user_agent": self.request.user_agent.string or None,
             "request_ip": self.request_ip,
             "user": self.user,
+            "request_source": self.request_source,
             **{kind: entities.get(kind) for kind in ENTITIES},
         }
 
@@ -244,6 +250,10 @@ class RequestEvent:
             return forwarded.rsplit(",", 1)[-1].strip() or None
 
         return self.request.remote_addr
+
+    @property
+    def request_source(self) -> str | None:
+        return self.request.headers.get(self.REQUEST_SOURCE_HEADER) or None
 
     def params(self) -> dict[str, Any]:
         """Entity references the caller sent, wherever they put them.
